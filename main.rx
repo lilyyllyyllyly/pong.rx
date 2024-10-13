@@ -1,0 +1,144 @@
+/* adding the fucntions from the c shared lib */
+
+if addcfunc("InitWindow") then exit
+if addcfunc("CloseWindow") then exit
+if addcfunc("WindowShouldClose") then exit
+
+if addcfunc("BeginDrawing") then exit
+if addcfunc("EndDrawing") then exit
+if addcfunc("ClearBackground") then exit
+if addcfunc("DrawText") then exit
+if addcfunc("DrawRectangle") then exit
+
+if addcfunc("GetFrameTime") then exit
+
+if addcfunc("IsKeyDown") then exit
+
+/* --- */
+
+/* keycodes (from raylib.h) */
+KEY_S = 83
+KEY_W = 87
+KEY_I = 73
+KEY_K = 75
+
+/* window */
+win.w = 800
+win.h = 600
+win.title = "test from rexx!"
+
+/* ball */
+ball.w = 35
+ball.h = 35
+
+ball.startx = (win.w - ball.w)/2
+ball.starty = (win.h - ball.h)/2
+
+ball.x = ball.startx
+ball.y = ball.starty
+
+ball.velx = 250
+ball.vely = 250
+
+/* left paddle */
+paddle1.w = 35
+paddle1.h = 200
+paddle1.x = 10
+paddle1.y = (win.h - paddle1.h)/2
+
+paddle1.score = 0
+
+/* right paddle */
+paddle2.w = 35
+paddle2.h = 200
+paddle2.x = 755
+paddle2.y = (win.h - paddle2.h)/2
+
+paddle2.score = 0
+
+/* generic */
+move_speed = 300
+
+/* --- */
+
+call InitWindow win.w, win.h, win.title
+
+do until WindowShouldClose()
+	/* updating paddles */
+	scaled_speed = move_speed * GetFrameTime()
+
+	/* - paddle 1 */
+	if (IsKeyDown(KEY_S)) & (paddle1.y + scaled_speed + paddle1.h <= win.h) then do
+		paddle1.y += move_speed * GetFrameTime()
+	end; else if (IsKeyDown(KEY_W)) & (paddle1.y - scaled_speed >= 0) then do
+		paddle1.y -= move_speed * GetFrameTime()
+	end
+
+	/* - paddle 2 */
+	if (IsKeyDown(KEY_K)) & (paddle2.y + scaled_speed + paddle2.h <= win.h) then do
+		paddle2.y += move_speed * GetFrameTime()
+	end; else if (IsKeyDown(KEY_I)) & (paddle2.y - scaled_speed >= 0) then do
+		paddle2.y -= move_speed * GetFrameTime()
+	end
+
+	/* updating ball */
+	nextx = ball.x + ball.velx * GetFrameTime()
+	nexty = ball.y + ball.vely * GetFrameTime()
+
+	left_horizontally = (nextx < 0) | (nextx + ball.w > win.w)
+
+	if nextx < 0 then do
+		/* paddle2 gets a point */
+		paddle2.score += 1
+		ball.x = ball.startx
+		ball.y = ball.starty
+	end; else if (nextx + ball.w > win.w) then do
+		/* paddle1 gets a point */
+		paddle1.score += 1
+		ball.x = ball.startx
+		ball.y = ball.starty
+	end; else do
+		hit_left_paddle  = ((nextx < paddle1.x + paddle1.w) & (nexty + ball.h > paddle1.y) & (nexty < paddle1.y + paddle1.h))
+		hit_right_paddle = ((nextx + ball.w > paddle2.x)    & (nexty + ball.h > paddle2.y) & (nexty < paddle2.y + paddle2.h))
+	
+		if hit_left_paddle | hit_right_paddle then do
+			ball.velx *= -1
+		end
+	
+		if (nexty < 0) | (nexty + ball.h > win.h) then do
+			ball.vely *= -1
+		end
+	
+		ball.x += ball.velx * GetFrameTime()
+		ball.y += ball.vely * GetFrameTime()
+	end
+
+	call BeginDrawing
+
+	call ClearBackground #cadaedff
+
+	call DrawText paddle1.score" | "paddle2.score, 20, 20, 30, #ff0088ff
+
+	call DrawRectangle ball.x, ball.y, ball.w, ball.h, #ffffffff
+	call DrawRectangle paddle1.x, paddle1.y, paddle1.w, paddle1.h, #ffffffff
+	call DrawRectangle paddle2.x, paddle2.y, paddle2.w, paddle2.h, #ffffffff
+
+	call EndDrawing
+end
+
+call CloseWindow
+
+exit
+
+/* --- */
+
+addcfunc: procedure
+	parse arg name
+
+	if rxfuncadd(name, 'external', 'rexx'name) <> 0 then do
+		say rxfuncerrmsg()
+		return E_ERROR
+	end
+
+	return 0
+
