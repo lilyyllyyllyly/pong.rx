@@ -4,6 +4,9 @@ I just randomly felt like making something in this language when I first heard o
 
 The left paddle moves with W/S while the right paddle moves with I/K.
 
+The `pong.rx` file contains the actual REXX code and game logic, while raylib-rx.c contains the C bindings to make it possible to call raylib functions from REXX.
+Ironically, the C bindings are the great majority of the code in this repo.
+
 This is absolutely terrible because I just wanted to be done with it as fast as possible, but it works mostly i think?
 
 ## Building & Running
