@@ -3,5 +3,5 @@ CFLAGS ?= -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-but-set-variab
 LIBS ?= -lraylib
 
 compile:
-	${CC} -shared ${CFLAGS} main.c ${LIBS} -o libexternal.so
+	${CC} -shared ${CFLAGS} raylib-rx.c ${LIBS} -o libexternal.so
 
